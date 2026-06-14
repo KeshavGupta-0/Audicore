@@ -173,7 +173,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
           // Only update src and load if the song actually changed
           if (lastSongIdRef.current !== currentSong.id) {
             setProgress(0);
-            audio.src = currentSong.audio || currentSong.file_path || '';
+            audio.src = `/api/v1/stream/${currentSong.id}`;
             audio.load();
             lastSongIdRef.current = currentSong.id;
           }
