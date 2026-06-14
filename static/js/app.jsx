@@ -173,10 +173,18 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
           const audio = audioRef.current;
           // Only update src and load if the song actually changed
           if (lastSongIdRef.current !== currentSong.id) {
-            setProgress(0);
-            audio.src = `/api/v1/stream/${currentSong.id}`;
-            audio.load();
-            lastSongIdRef.current = currentSong.id;
+              setProgress(0);
+              audio.src = `/api/v1/stream/${currentSong.id}`;
+              audio.load();
+              lastSongIdRef.current = currentSong.id;
+              // Log play via authenticated fetch (audio element can't send auth headers)
+              const token = localStorage.getItem('access_token');
+              if (token) {
+                fetch(`/api/v1/stream/${currentSong.id}/play`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${token}` }
+                }).catch(() => {});
+              }
           }
           
           if (isPlaying) {

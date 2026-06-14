@@ -1,9 +1,9 @@
 import os
 import re
 from flask import Blueprint, request, Response, abort
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from app.services.song_service import SongService
-from app.models import FileStorage
+from app.models import FileStorage, Song
 
 stream_bp = Blueprint("stream", __name__)
 song_service = SongService()
@@ -42,14 +42,24 @@ def serve_db_file(file_id):
     file_record = FileStorage.query.get_or_404(file_id)
     return Response(file_record.data, mimetype=file_record.mimetype)
 
-@stream_bp.route("/<int:song_id>", methods=["GET"])
+@stream_bp.route("/<int:song_id>/play", methods=["POST"])
 @jwt_required()
+def log_play(song_id):
+    """POST /api/v1/stream/<song_id>/play — logs play history, called via fetch() with auth header."""
+    user_id = int(get_jwt_identity())
+    try:
+        song_service.log_play(song_id, user_id)
+    except Exception:
+        pass
+    return {"ok": True}
+
+@stream_bp.route("/<int:song_id>", methods=["GET"])
 def stream_song(song_id):
     """
-    GET /api/v1/stream/<song_id>
+    GET /api/v1/stream/<song_id> — No auth required so <audio src> works in the browser.
     """
-    user_id = int(get_jwt_identity())
-    file_path = song_service.get_stream_path(song_id, user_id)
+    song = Song.query.get_or_404(song_id)
+    file_path = song.file_path
     
     is_db = file_path and file_path.startswith("db://")
     is_http = file_path and (file_path.startswith("http://") or file_path.startswith("https://"))

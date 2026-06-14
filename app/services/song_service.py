@@ -379,6 +379,19 @@ class SongService:
 
         return os.path.join(current_app.static_folder, path_to_join)
 
+    def log_play(self, song_id: int, user_id: int) -> None:
+        """
+        Logs a play history record and increments the play count.
+        Called from the separate /play endpoint (authenticated via fetch).
+        """
+        song = self.song_repo.get_by_id(song_id)
+        if not song:
+            return
+        history = PlayHistory(user_id=user_id, song_id=song_id)
+        db.session.add(history)
+        db.session.commit()
+        self.song_repo.increment_play_count(song_id)
+
     def get_trending(self, limit: int = 10) -> List[Song]:
         """
         Retrieves the trending/popular songs based on plays in the last 7 days.
