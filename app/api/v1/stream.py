@@ -52,7 +52,12 @@ def stream_song(song_id):
     file_path = song_service.get_stream_path(song_id, user_id)
     
     is_db = file_path and file_path.startswith("db://")
+    is_http = file_path and (file_path.startswith("http://") or file_path.startswith("https://"))
     
+    if is_http:
+        from flask import redirect
+        return redirect(file_path)
+        
     if not is_db and (not file_path or not os.path.exists(file_path)):
         abort(404)
         

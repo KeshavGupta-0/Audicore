@@ -307,8 +307,6 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
           onMouseLeave={handleLeave}
         >
           <img src={actualData.cover_url || actualData.cover || actualData.image} alt={actualData.title || actualData.stage_name || actualData.name} />
-          {actualData.plays && <div className="card-badge"><i className="bi bi-play-fill"></i> {(actualData.plays/1000).toFixed(1)}k</div>}
-          {actualData.play_count && <div className="card-badge"><i className="bi bi-play-fill"></i> {(actualData.play_count/1000).toFixed(1)}k</div>}
           <div>
             <div className="card-title">{actualData.title || actualData.stage_name || actualData.name}</div>
             <div className="card-subtitle">{actualData.artist_name || actualData.artist || (type === 'artist' ? 'Artist' : 'Album')}</div>

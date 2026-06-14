@@ -29,7 +29,7 @@
       grid-template-columns: 240px 1fr;
       grid-template-rows: calc(100vh - 88px) 88px;
       height: 100vh;
-      width: 100vw;
+      width: 100%;
       overflow: hidden;
     }
     .sidebar { grid-column: 1; grid-row: 1; background: rgba(0, 5, 5, 0.5); backdrop-filter: blur(10px); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
@@ -282,6 +282,7 @@
 
       /* Player Bar */
       .player-bar { 
+        grid-column: 1 !important;
         grid-template-columns: 1fr !important; 
         grid-template-rows: 50px auto !important; 
         height: 140px !important; 
