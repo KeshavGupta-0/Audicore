@@ -61,9 +61,10 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
         <>
           {mobileMenuOpen && <div className="mobile-overlay d-md-none" onClick={() => setMobileMenuOpen(false)}></div>}
           <div className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-            <div className="logo" onClick={() => { setView({ name: 'home' }); setMobileMenuOpen(false); }}>
+            <div className="logo position-relative" onClick={() => { setView({ name: 'home' }); setMobileMenuOpen(false); }}>
               <img src="/static/assets/audicore-main-logo.png" alt="Audicore" style={{ height: 40, objectFit: 'contain' }} />
               <span className="logo-text">Audicore</span>
+              {mobileMenuOpen && <i className="bi bi-x-lg position-absolute d-md-none text-white" style={{ right: 24, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', fontSize: '1.5rem' }} onClick={(e) => { e.stopPropagation(); setMobileMenuOpen(false); }}></i>}
             </div>
             
             <div className="mt-4">
@@ -1182,8 +1183,11 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             <div className="glow-layer glow2" style={{ top: '60%', left: '80%' }}></div>
             <Sidebar />
             <div className="main-area" id="main-scroll">
-              <div className="mobile-header d-md-none">
-                <div className="logo-text fw-bold fs-4" style={{ fontFamily: 'Clash Display' }}>Audicore</div>
+              <div className="mobile-header d-md-none d-flex justify-content-between align-items-center w-100">
+                <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }} onClick={() => setView({ name: 'home' })}>
+                  <img src="/static/assets/audicore-main-logo.png" alt="Audicore Logo" style={{ height: 32, objectFit: 'contain' }} />
+                  <div className="logo-text fw-bold fs-4" style={{ fontFamily: 'Clash Display', margin: 0 }}>Audicore</div>
+                </div>
                 <i className="bi bi-list fs-1 text-white" style={{ cursor: 'pointer' }} onClick={() => setMobileMenuOpen(true)}></i>
               </div>
               {currentView.name === 'home' && <HomeView />}
