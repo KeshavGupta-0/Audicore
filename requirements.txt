@@ -1,0 +1,13 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-JWT-Extended
+Flask-CORS
+Flask-Limiter
+PyMySQL
+cryptography
+Werkzeug
+mutagen
+python-dotenv
+gunicorn
+yt-dlp

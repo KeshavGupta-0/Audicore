@@ -1,0 +1,32 @@
+# Environment Variables
+.env
+
+# Python Caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS Files
+Thumbs.db
+Desktop.ini
+
+# Application Uploads
+static/uploads/*
+!static/uploads/.gitkeep
