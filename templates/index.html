@@ -3,22 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Audicore</title>
+  <meta name="description" content="Audicore — Stream and discover music. Upload your tracks, explore trending songs, and build playlists.">
+  <title>Audicore — Music Streaming</title>
+
+  <!-- DNS prefetch & preconnect for CDN speed -->
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://code.jquery.com">
+
+  <!-- Fonts (display=swap prevents FOIT) -->
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,700&f[]=satoshi@400,500&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap CSS (layout utilities only) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+  <!-- App styles -->
   <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
   <div id="root"></div>
 
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- React (production builds, no source maps) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin defer></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin defer></script>
 
-  <script type="text/babel" src="/static/js/app.jsx"></script>
+  <!-- jQuery (used for $.ajax throughout app) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin defer></script>
+
+  <!-- Bootstrap JS (for modal, tooltip etc.) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+
+  <!--
+    Pre-compiled JS — no babel/standalone needed.
+    Whenever you edit app.jsx, run:  npm run build
+  -->
+  <script src="/static/js/app.js" defer></script>
 </body>
 </html>

@@ -30,3 +30,10 @@ Desktop.ini
 # Application Uploads
 static/uploads/*
 !static/uploads/.gitkeep
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# Compiled JS is intentionally tracked (deployed to Render)
+# DO NOT add static/js/app.js here

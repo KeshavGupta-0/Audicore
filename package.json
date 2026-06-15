@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "build": "babel static/js/app.jsx --out-file static/js/app.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.29.7",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "sharp": "^0.35.1"
+  }
+}

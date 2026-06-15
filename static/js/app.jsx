@@ -62,7 +62,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
           {mobileMenuOpen && <div className="mobile-overlay d-md-none" onClick={() => setMobileMenuOpen(false)}></div>}
           <div className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
             <div className="logo position-relative" onClick={() => { setView({ name: 'home' }); setMobileMenuOpen(false); }}>
-              <img src="/static/assets/audicore-main-logo.png" alt="Audicore" style={{ height: 40, objectFit: 'contain' }} />
+              <img src="/static/assets/audicore-logo.webp" alt="Audicore" style={{ height: 36, objectFit: 'contain' }} />
               <span className="logo-text">Audicore</span>
               {mobileMenuOpen && <i className="bi bi-x-lg position-absolute d-md-none text-white" style={{ right: 24, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', fontSize: '1.5rem' }} onClick={(e) => { e.stopPropagation(); setMobileMenuOpen(false); }}></i>}
             </div>
@@ -235,12 +235,19 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
           <div className="player-left d-flex align-items-center gap-3">
             {currentSong ? (
               <>
-                <img src={currentSong.cover || currentSong.cover_url} alt="cover" style={{ width: 52, height: 52, borderRadius: 4, objectFit: 'cover' }} className={isPlaying ? 'animate__animated animate__pulse animate__infinite animate__slower' : ''} />
-                <div style={{ maxWidth: 150 }}>
-                  <div className="card-title text-truncate" style={{ fontSize: 14 }}>{currentSong.title}</div>
+                <img src={currentSong.cover || currentSong.cover_url} alt="cover" className={`player-cover ${isPlaying ? 'cover-spin' : ''}`} />
+                <div style={{ minWidth: 0 }}>
+                  <div className="card-title text-truncate d-flex align-items-center" style={{ fontSize: 14 }}>
+                    {currentSong.title}
+                    {isPlaying && (
+                      <div className="mini-eq d-none d-md-flex">
+                        <span></span><span></span><span></span>
+                      </div>
+                    )}
+                  </div>
                   <div className="card-subtitle text-truncate" style={{ fontSize: 12 }}>{currentSong.artist || currentSong.artist_name}</div>
                 </div>
-                <button className="control-btn" onClick={() => likeSong(currentSong.id)}>
+                <button className="control-btn ms-2" onClick={() => likeSong(currentSong.id)}>
                   <i className={`bi ${likedSongs.has(currentSong.id) ? 'bi-heart-fill text-green' : 'bi-heart'}`}></i>
                 </button>
               </>
@@ -1200,7 +1207,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             <div className="main-area" id="main-scroll">
               <div className="mobile-header d-md-none d-flex justify-content-between align-items-center w-100">
                 <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }} onClick={() => setView({ name: 'home' })}>
-                  <img src="/static/assets/audicore-main-logo.png" alt="Audicore Logo" style={{ height: 32, objectFit: 'contain' }} />
+                  <img src="/static/assets/audicore-logo.webp" alt="Audicore Logo" style={{ height: 30, objectFit: 'contain' }} />
                   <div className="logo-text fw-bold fs-4" style={{ fontFamily: 'Clash Display', margin: 0 }}>Audicore</div>
                 </div>
                 <i className="bi bi-list fs-1 text-white" style={{ cursor: 'pointer' }} onClick={() => setMobileMenuOpen(true)}></i>
