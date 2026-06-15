@@ -901,7 +901,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             setAuthModal(null);
           },
           error: (xhr) => {
-            showToast('Authentication failed');
+                          showToast('Authentication failed');
           }
         });
       };
@@ -909,10 +909,10 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       if (!authModal) return null;
 
       return (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content original-theme animate__animated animate__zoomIn animate__faster">
-              <div className="modal-header d-flex flex-column align-items-center position-relative">
+            <div className="modal-content animate__animated animate__zoomIn animate__faster" style={{ background: 'var(--bg-glass)', backdropFilter: 'var(--blur-heavy)', border: '1px solid rgba(0,255,255,0.1)', color: '#fff', borderRadius: '16px' }}>
+              <div className="modal-header d-flex flex-column align-items-center position-relative border-0 pb-0">
                 <h5 className="modal-title">{isLogin ? 'Log In' : 'Sign Up'}</h5>
                 <button type="button" className="btn-close btn-close-white position-absolute top-0 end-0 m-3" onClick={() => setAuthModal(null)}></button>
               </div>
@@ -1037,7 +1037,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       const [isPlaying, setIsPlaying] = useState(false);
       const currentSong = queue[queueIndex] || null;
       const [user, setUser] = useState(null);
-      const [authModal, setAuthModal] = useState(null);
+      const [authModal, setAuthModal] = useState(localStorage.getItem('access_token') ? null : 'login');
       const [likedSongs, setLikedSongs] = useState(new Set());
       const [toast, setToast] = useState({ show: false, msg: '' });
 

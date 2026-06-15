@@ -1340,14 +1340,22 @@ const AuthModal = () => {
     className: "modal d-block",
     style: {
       backgroundColor: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(5px)'
+      backdropFilter: 'blur(5px)',
+      zIndex: 1060
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "modal-dialog modal-dialog-centered"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "modal-content original-theme animate__animated animate__zoomIn animate__faster"
+    className: "modal-content animate__animated animate__zoomIn animate__faster",
+    style: {
+      background: 'var(--bg-glass)',
+      backdropFilter: 'var(--blur-heavy)',
+      border: '1px solid rgba(0,255,255,0.1)',
+      color: '#fff',
+      borderRadius: '16px'
+    }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "modal-header d-flex flex-column align-items-center position-relative"
+    className: "modal-header d-flex flex-column align-items-center position-relative border-0 pb-0"
   }, /*#__PURE__*/React.createElement("h5", {
     className: "modal-title"
   }, isLogin ? 'Log In' : 'Sign Up'), /*#__PURE__*/React.createElement("button", {
@@ -1518,7 +1526,7 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const currentSong = queue[queueIndex] || null;
   const [user, setUser] = useState(null);
-  const [authModal, setAuthModal] = useState(null);
+  const [authModal, setAuthModal] = useState(localStorage.getItem('access_token') ? null : 'login');
   const [likedSongs, setLikedSongs] = useState(new Set());
   const [toast, setToast] = useState({
     show: false,
