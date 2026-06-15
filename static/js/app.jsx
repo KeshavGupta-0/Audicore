@@ -68,13 +68,13 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             </div>
             
             <div className="mt-4">
-              <a href="#" className={`nav-item ${currentView.name === 'home' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setView({ name: 'home' }); setMobileMenuOpen(false); }}>
+              <a href="#" className={`sidebar-item ${currentView.name === 'home' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setView({ name: 'home' }); setMobileMenuOpen(false); }}>
                 <i className="bi bi-house-door-fill fs-5"></i> Home
               </a>
-              <a href="#" className={`nav-item ${currentView.name === 'search' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setView({ name: 'search' }); setMobileMenuOpen(false); }}>
+              <a href="#" className={`sidebar-item ${currentView.name === 'search' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setView({ name: 'search' }); setMobileMenuOpen(false); }}>
                 <i className="bi bi-search fs-5"></i> Search
               </a>
-              <a href="#" className={`nav-item ${currentView.name === 'library' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); if (user) { setView({ name: 'library' }); setMobileMenuOpen(false); } else { setAuthModal('login'); } }}>
+              <a href="#" className={`sidebar-item ${currentView.name === 'library' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); if (user) { setView({ name: 'library' }); setMobileMenuOpen(false); } else { setAuthModal('login'); } }}>
                 <i className="bi bi-collection-play-fill fs-5"></i> Your Library
               </a>
             </div>
@@ -83,7 +83,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
               <div className="mt-4 px-4">
                 <div className="label mb-3">Playlists</div>
                 {userPlaylists && userPlaylists.map(p => (
-                  <a key={p.id} className="nav-item px-0 py-2" onClick={() => { setView({ name: 'detail', type: 'playlist', id: p.id, data: p }); setMobileMenuOpen(false); }}>
+                  <a key={p.id} className="sidebar-item px-0 py-2" onClick={() => { setView({ name: 'detail', type: 'playlist', id: p.id, data: p }); setMobileMenuOpen(false); }}>
                     {p.title}
                   </a>
                 ))}

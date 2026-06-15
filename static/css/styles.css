@@ -182,7 +182,7 @@ h3 { font-size: clamp(14px, 1.8vw, 18px); }
 }
 
 /* --- Nav Items --- */
-.nav-item {
+.sidebar-item {
   padding: 11px 16px;
   color: var(--text-muted);
   text-decoration: none;
@@ -198,7 +198,7 @@ h3 { font-size: clamp(14px, 1.8vw, 18px); }
   margin: 1px 0;
   position: relative;
 }
-.nav-item::before {
+.sidebar-item::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -207,18 +207,18 @@ h3 { font-size: clamp(14px, 1.8vw, 18px); }
   transition: opacity var(--ease-mid);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
-.nav-item:hover {
+.sidebar-item:hover {
   color: var(--text-primary);
   border-left-color: var(--accent2);
   padding-left: 22px;
 }
-.nav-item:hover::before { opacity: 1; }
-.nav-item.active {
+.sidebar-item:hover::before { opacity: 1; }
+.sidebar-item.active {
   color: var(--text-primary);
   border-left-color: var(--accent);
   background: linear-gradient(90deg, rgba(0, 255, 255, 0.12), transparent);
 }
-.nav-item i { font-size: 16px; }
+.sidebar-item i { font-size: 16px; }
 
 /* --- Sidebar section divider --- */
 .sidebar-divider {
@@ -797,7 +797,7 @@ h3 { font-size: clamp(14px, 1.8vw, 18px); }
   .player-right .vol-slider { width: 72px; }
   .hero-cover { width: 150px !important; height: 150px !important; }
   .music-card { min-width: 145px; }
-  .nav-item { padding: 10px 14px; font-size: 13px; }
+  .sidebar-item { padding: 10px 14px; font-size: 13px; }
 }
 
 /* ============================================================

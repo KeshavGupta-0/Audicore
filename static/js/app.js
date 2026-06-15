@@ -146,7 +146,7 @@ const Sidebar = () => {
     className: "mt-4"
   }, /*#__PURE__*/React.createElement("a", {
     href: "#",
-    className: `nav-item ${currentView.name === 'home' ? 'active' : ''}`,
+    className: `sidebar-item ${currentView.name === 'home' ? 'active' : ''}`,
     onClick: e => {
       e.preventDefault();
       setView({
@@ -158,7 +158,7 @@ const Sidebar = () => {
     className: "bi bi-house-door-fill fs-5"
   }), " Home"), /*#__PURE__*/React.createElement("a", {
     href: "#",
-    className: `nav-item ${currentView.name === 'search' ? 'active' : ''}`,
+    className: `sidebar-item ${currentView.name === 'search' ? 'active' : ''}`,
     onClick: e => {
       e.preventDefault();
       setView({
@@ -170,7 +170,7 @@ const Sidebar = () => {
     className: "bi bi-search fs-5"
   }), " Search"), /*#__PURE__*/React.createElement("a", {
     href: "#",
-    className: `nav-item ${currentView.name === 'library' ? 'active' : ''}`,
+    className: `sidebar-item ${currentView.name === 'library' ? 'active' : ''}`,
     onClick: e => {
       e.preventDefault();
       if (user) {
@@ -190,7 +190,7 @@ const Sidebar = () => {
     className: "label mb-3"
   }, "Playlists"), userPlaylists && userPlaylists.map(p => /*#__PURE__*/React.createElement("a", {
     key: p.id,
-    className: "nav-item px-0 py-2",
+    className: "sidebar-item px-0 py-2",
     onClick: () => {
       setView({
         name: 'detail',
