@@ -190,6 +190,37 @@ def yt_resolve():
     result = song_service.resolve_youtube(url, custom_title=custom_title)
     return jsonify(result), 200
 
+@songs_bp.route("/yt-import", methods=["POST"])
+@jwt_required_custom
+def yt_import():
+    """
+    Imports a YouTube URL directly on the backend using RapidAPI or yt-dlp fallback.
+    POST /api/v1/songs/yt-import
+    """
+    from app.models import Artist
+    from app import db
+    
+    data = request.get_json()
+    if not data or 'youtube_url' not in data:
+        raise ValidationError("youtube_url is required")
+        
+    url = data.get('youtube_url')
+    custom_title = data.get('title')
+    
+    user = g.current_user
+    if not user:
+        raise ValidationError("Missing user identity")
+        
+    artist = db.session.query(Artist).filter(Artist.user_id == user.id).first()
+    if not artist:
+        artist = Artist(user_id=user.id, stage_name=user.username, bio="A brand new artist on Audicore.")
+        user.role = "artist"
+        db.session.add(artist)
+        db.session.commit()
+        
+    song = song_service.import_from_youtube(artist.id, url, custom_title)
+    return jsonify(format_song(song)), 201
+
 
 @songs_bp.route("/<int:song_id>/like", methods=["POST"])
 @jwt_required_custom

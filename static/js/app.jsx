@@ -622,42 +622,15 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
                         };
 
                         try {
-                          setBtnState("Resolving Link...");
-                          const resolveData = await $.ajax({
-                            url: '/api/v1/songs/yt-resolve',
+                          setBtnState("Importing from YouTube...");
+                          const ytUrl = formData.get('youtube_url');
+                          const ytTitle = formData.get('title') || undefined;
+                          
+                          await $.ajax({
+                            url: '/api/v1/songs/yt-import',
                             type: 'POST',
                             contentType: 'application/json',
-                            data: JSON.stringify(Object.fromEntries(formData))
-                          });
-
-                          setBtnState("Downloading Audio...");
-                          const audioResp = await fetch(resolveData.download_link);
-                          if (!audioResp.ok) throw new Error("Blocked by CDN");
-                          const audioBlob = await audioResp.blob();
-
-                          let coverBlob = null;
-                          if (resolveData.thumbnail) {
-                            try {
-                              const coverResp = await fetch(resolveData.thumbnail);
-                              if (coverResp.ok) coverBlob = await coverResp.blob();
-                            } catch (e) {
-                              console.warn("Cover download skipped due to CORS.");
-                            }
-                          }
-
-                          setBtnState("Uploading...");
-                          const uploadData = new FormData();
-                          uploadData.append('audio_file', audioBlob, 'audio.mp3');
-                          if (coverBlob) uploadData.append('cover_file', coverBlob, 'cover.jpg');
-                          uploadData.append('title', resolveData.title);
-                          uploadData.append('is_published', 'true');
-
-                          await $.ajax({
-                            url: '/api/v1/songs/upload',
-                            type: 'POST',
-                            data: uploadData,
-                            processData: false,
-                            contentType: false
+                            data: JSON.stringify({ youtube_url: ytUrl, title: ytTitle })
                           });
 
                           showToast('Song imported successfully!');
