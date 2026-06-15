@@ -517,16 +517,16 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
           <h1 className="mb-4">Your Library</h1>
           <ul className="nav nav-tabs mb-4">
             <li className="nav-item">
-              <a className={`nav-link ${tab === 'playlists' ? 'active' : ''}`} onClick={() => setTab('playlists')}>Playlists</a>
+              <button type="button" className={`nav-link ${tab === 'playlists' ? 'active' : ''}`} onClick={() => setTab('playlists')}>Playlists</button>
             </li>
             <li className="nav-item">
-              <a className={`nav-link ${tab === 'liked' ? 'active' : ''}`} onClick={() => setTab('liked')}>Liked Songs</a>
+              <button type="button" className={`nav-link ${tab === 'liked' ? 'active' : ''}`} onClick={() => setTab('liked')}>Liked Songs</button>
             </li>
             <li className="nav-item">
-              <a className={`nav-link ${tab === 'mysongs' ? 'active' : ''}`} onClick={() => setTab('mysongs')}>My Songs</a>
+              <button type="button" className={`nav-link ${tab === 'mysongs' ? 'active' : ''}`} onClick={() => setTab('mysongs')}>My Songs</button>
             </li>
             <li className="nav-item">
-              <a className={`nav-link ${tab === 'upload' ? 'active' : ''}`} onClick={() => setTab('upload')}>Upload</a>
+              <button type="button" className={`nav-link ${tab === 'upload' ? 'active' : ''}`} onClick={() => setTab('upload')}>Upload</button>
             </li>
           </ul>
 

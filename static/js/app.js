@@ -815,22 +815,26 @@ const LibraryView = () => {
     className: "nav nav-tabs mb-4"
   }, /*#__PURE__*/React.createElement("li", {
     className: "nav-item"
-  }, /*#__PURE__*/React.createElement("a", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `nav-link ${tab === 'playlists' ? 'active' : ''}`,
     onClick: () => setTab('playlists')
   }, "Playlists")), /*#__PURE__*/React.createElement("li", {
     className: "nav-item"
-  }, /*#__PURE__*/React.createElement("a", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `nav-link ${tab === 'liked' ? 'active' : ''}`,
     onClick: () => setTab('liked')
   }, "Liked Songs")), /*#__PURE__*/React.createElement("li", {
     className: "nav-item"
-  }, /*#__PURE__*/React.createElement("a", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `nav-link ${tab === 'mysongs' ? 'active' : ''}`,
     onClick: () => setTab('mysongs')
   }, "My Songs")), /*#__PURE__*/React.createElement("li", {
     className: "nav-item"
-  }, /*#__PURE__*/React.createElement("a", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: `nav-link ${tab === 'upload' ? 'active' : ''}`,
     onClick: () => setTab('upload')
   }, "Upload"))), /*#__PURE__*/React.createElement("div", {
