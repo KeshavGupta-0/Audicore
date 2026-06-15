@@ -357,14 +357,6 @@ const PlayerBar = () => {
     setQueueIndex(prevIdx);
     setIsPlaying(true);
   };
-  const handleSeek = e => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const newTime = percent * duration;
-    audioRef.current.currentTime = newTime;
-    setProgress(newTime);
-  };
   const handleVolume = e => {
     const val = parseFloat(e.target.value);
     setVolume(val);
@@ -436,23 +428,40 @@ const PlayerBar = () => {
   }, /*#__PURE__*/React.createElement("i", {
     className: `bi ${repeat === 'one' ? 'bi-repeat-1' : 'bi-repeat'}`
   }))), /*#__PURE__*/React.createElement("div", {
-    className: "progress-container"
-  }, /*#__PURE__*/React.createElement("span", null, formatTime(progress)), /*#__PURE__*/React.createElement("div", {
-    className: "progress-bar-custom",
-    onClick: handleSeek,
-    onTouchEnd: handleSeek,
-    onTouchMove: handleSeek,
+    className: "progress-container w-100 px-3",
     style: {
-      padding: '10px 0',
-      margin: '-10px 0',
-      boxSizing: 'content-box'
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "progress-fill",
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
-      width: `${duration ? progress / duration * 100 : 0}%`
+      fontSize: '11px',
+      color: 'var(--text-muted)',
+      minWidth: '32px',
+      textAlign: 'right'
     }
-  })), /*#__PURE__*/React.createElement("span", null, formatTime(duration)))), /*#__PURE__*/React.createElement("div", {
+  }, formatTime(progress)), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    className: "progress-slider",
+    min: "0",
+    max: duration || 100,
+    value: progress || 0,
+    onChange: e => {
+      const newTime = parseFloat(e.target.value);
+      if (audioRef.current) audioRef.current.currentTime = newTime;
+      setProgress(newTime);
+    },
+    style: {
+      background: `linear-gradient(to right, #00ffff ${duration ? progress / duration * 100 : 0}%, rgba(255, 255, 255, 0.15) ${duration ? progress / duration * 100 : 0}%)`
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: '11px',
+      color: 'var(--text-muted)',
+      minWidth: '32px'
+    }
+  }, formatTime(duration)))), /*#__PURE__*/React.createElement("div", {
     className: "player-right d-flex justify-content-end align-items-center gap-2 pe-3"
   }, /*#__PURE__*/React.createElement("i", {
     className: `bi ${volume === 0 ? 'bi-volume-mute' : volume < 0.5 ? 'bi-volume-down' : 'bi-volume-up'} text-muted`
