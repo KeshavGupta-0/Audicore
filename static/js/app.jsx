@@ -217,7 +217,8 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
 
       const handleSeek = (e) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
+        const clientX = e.touches ? e.touches[0].clientX : (e.changedTouches ? e.changedTouches[0].clientX : e.clientX);
+        const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         const newTime = percent * duration;
         audioRef.current.currentTime = newTime;
         setProgress(newTime);
@@ -266,7 +267,13 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             </div>
             <div className="progress-container">
               <span>{formatTime(progress)}</span>
-              <div className="progress-bar-custom" onClick={handleSeek}>
+              <div
+                className="progress-bar-custom"
+                onClick={handleSeek}
+                onTouchEnd={handleSeek}
+                onTouchMove={handleSeek}
+                style={{ padding: '10px 0', margin: '-10px 0', boxSizing: 'content-box' }}
+              >
                 <div className="progress-fill" style={{ width: `${duration ? (progress/duration)*100 : 0}%` }}></div>
               </div>
               <span>{formatTime(duration)}</span>
