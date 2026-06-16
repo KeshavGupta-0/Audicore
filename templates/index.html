@@ -344,16 +344,22 @@
         clearTimeout(rampTimer);
         setProgress(val, msg);
       };
+      var loaderStart = Date.now();
       window.loaderDone = function() {
         clearTimeout(rampTimer);
         setProgress(100, 'Ready!');
+        // Enforce a minimum 2-second display so it never flashes out on fast connections
+        var elapsed = Date.now() - loaderStart;
+        var minDisplay = 2000;
+        var delay = Math.max(600, minDisplay - elapsed);
         setTimeout(function() {
+          loader.style.transition = 'opacity 0.8s ease, visibility 0.8s ease';
           loader.classList.add('hidden');
-          // Remove from DOM after fade
+          // Remove from DOM after fade completes
           setTimeout(function() {
             if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
-          }, 700);
-        }, 500);
+          }, 900);
+        }, delay);
       };
 
       // ── Keep-alive ping (every 14 min to prevent Render cold starts) ──

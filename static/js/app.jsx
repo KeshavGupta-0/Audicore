@@ -785,7 +785,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
     };
 
     const DetailView = () => {
-      const { detailContext, playSong, user, showToast, fetchUserPlaylists, setView } = useContext(AppContext);
+      const { detailContext, playSong, user, showToast, fetchUserPlaylists, setView, detailRefreshKey } = useContext(AppContext);
       const { type, data } = detailContext;
       const [songs, setSongs] = useState([]);
       
@@ -811,9 +811,21 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             cover: data.cover || data.cover_url
           }]);
         } else {
-          setSongs(data.songs || []);
+          // Playlist: fetch fresh from API so songs are always current
+          $.ajax({
+            url: `/api/v1/playlists/${data.id}`,
+            type: 'GET',
+            success: (res) => {
+              setSongs((res.songs || []).map(s => ({
+                ...s,
+                audio: s.audio || s.file_path,
+                cover: s.cover || s.cover_url
+              })));
+            },
+            error: () => setSongs(data.songs || [])
+          });
         }
-      }, [type, data.id]);
+      }, [type, data.id, detailRefreshKey]);
       
       const handlePlayAll = () => {
         if(songs.length) playSong(songs[0], songs);
@@ -1011,7 +1023,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
     };
 
     const AddToPlaylistModal = () => {
-      const { addToPlaylistModal, setAddToPlaylistModal, showToast, userPlaylists } = useContext(AppContext);
+      const { addToPlaylistModal, setAddToPlaylistModal, showToast, userPlaylists, detailContext, currentView, bumpDetailRefresh } = useContext(AppContext);
       if (!addToPlaylistModal) return null;
       const song = addToPlaylistModal;
 
@@ -1040,6 +1052,12 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
                           data: JSON.stringify({ song_id: song.id }),
                           success: () => {
                             showToast(`Added to ${p.title}`);
+                            // If currently viewing this playlist, trigger a refresh
+                            if (currentView && currentView.name === 'detail' &&
+                                detailContext && detailContext.type === 'playlist' &&
+                                detailContext.data && detailContext.data.id === p.id) {
+                              bumpDetailRefresh();
+                            }
                           },
                           error: (xhr) => showToast(xhr.responseJSON?.error || 'Failed to add song')
                         });
@@ -1079,6 +1097,8 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
       const [mySongs, setMySongs] = useState([]);
+      const [detailRefreshKey, setDetailRefreshKey] = useState(0);
+      const bumpDetailRefresh = () => setDetailRefreshKey(k => k + 1);
       
       const fetchUserPlaylists = useCallback(() => {
         if (user) {
@@ -1106,7 +1126,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
         }
       }, [user]);
 
-      const fetchAllSongs = useCallback(() => {
+      const fetchAllSongs = useCallback((onComplete) => {
         $.ajax({ 
           url: '/api/v1/songs/', 
           type: 'GET', 
@@ -1116,9 +1136,8 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
               audio: s.audio || s.file_path,
               cover: s.cover || s.cover_url
             })));
-            // Signal loader: all data ready — dismiss loading screen
-            if (typeof window.loaderDone === 'function') window.loaderDone();
-          } 
+          },
+          complete: () => { if (onComplete) onComplete(); }
         });
       }, []);
 
@@ -1130,8 +1149,16 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       useEffect(() => {
         // Signal loader: React mounted, starting API calls
         if (typeof window.loaderSetProgress === 'function') window.loaderSetProgress(88, 'Loading your music...');
-        $.ajax({ url: '/api/v1/artists/', type: 'GET', success: setDynamicArtists });
-        $.ajax({ url: '/api/v1/albums/', type: 'GET', success: setDynamicAlbums });
+
+        // Track all 4 concurrent requests — dismiss loader only when ALL complete
+        let done = 0;
+        const checkAllDone = () => {
+          done++;
+          if (done >= 4 && typeof window.loaderDone === 'function') window.loaderDone();
+        };
+
+        $.ajax({ url: '/api/v1/artists/', type: 'GET', success: setDynamicArtists, complete: checkAllDone });
+        $.ajax({ url: '/api/v1/albums/', type: 'GET', success: setDynamicAlbums, complete: checkAllDone });
         $.ajax({ 
           url: '/api/v1/songs/trending', 
           type: 'GET', 
@@ -1141,9 +1168,10 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
               audio: s.audio || s.file_path,
               cover: s.cover || s.cover_url
             })));
-          } 
+          },
+          complete: checkAllDone
         });
-        fetchAllSongs();
+        fetchAllSongs(checkAllDone);
       }, [fetchAllSongs]);
 
       const showToast = (msg) => {
@@ -1225,7 +1253,8 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
         userPlaylists, setUserPlaylists, fetchUserPlaylists,
         playlistModal, setPlaylistModal,
         addToPlaylistModal, setAddToPlaylistModal,
-        mobileMenuOpen, setMobileMenuOpen
+        mobileMenuOpen, setMobileMenuOpen,
+        detailRefreshKey, bumpDetailRefresh
       };
 
       return (
