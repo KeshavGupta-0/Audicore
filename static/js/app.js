@@ -318,9 +318,23 @@ const PlayerBar = () => {
       // Only update src and load if the song actually changed
       if (lastSongIdRef.current !== currentSong.id) {
         setProgress(0);
+        audio.preload = 'auto'; // Optimize playback speed
         audio.src = `/api/v1/stream/${currentSong.id}`;
         audio.load();
         lastSongIdRef.current = currentSong.id;
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentSong.title,
+            artist: currentSong.artist_name || currentSong.artist || 'Unknown Artist',
+            album: currentSong.album_title || currentSong.album || 'Unknown Album',
+            artwork: [{
+              src: currentSong.cover || currentSong.cover_url || '/static/assets/default-cover.webp',
+              sizes: '512x512',
+              type: 'image/webp'
+            }]
+          });
+        }
+
         // Log play via authenticated fetch (audio element can't send auth headers)
         const token = localStorage.getItem('access_token');
         if (token) {
@@ -357,6 +371,14 @@ const PlayerBar = () => {
     setQueueIndex(prevIdx);
     setIsPlaying(true);
   };
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
+      navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
+      navigator.mediaSession.setActionHandler('previoustrack', handlePrev);
+      navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+    }
+  }, [handlePrev, handleNext, setIsPlaying]);
   const handleVolume = e => {
     const val = parseFloat(e.target.value);
     setVolume(val);
@@ -805,6 +827,7 @@ const LibraryView = () => {
     dynamicAllSongs,
     fetchAllSongs,
     mySongs,
+    setMySongs,
     fetchMySongs
   } = useContext(AppContext);
   return /*#__PURE__*/React.createElement("div", {
@@ -993,17 +1016,18 @@ const LibraryView = () => {
         if (coverBlob) uploadData.append('cover_file', coverBlob, 'cover.jpg');
         uploadData.append('title', resolveData.title);
         uploadData.append('is_published', 'true');
-        await $.ajax({
+        const newSong = await $.ajax({
           url: '/api/v1/songs/upload',
           type: 'POST',
           data: uploadData,
           processData: false,
           contentType: false
         });
+        setMySongs(prev => [newSong, ...prev]);
         showToast('Song imported successfully!');
         e.target.reset();
+        setTab('mysongs');
         fetchAllSongs();
-        fetchMySongs();
       } catch (err) {
         const msg = err.responseJSON?.error || err.message || 'Unknown error';
         showToast('Import failed: ' + msg);
@@ -1057,13 +1081,14 @@ const LibraryView = () => {
         data: formData,
         processData: false,
         contentType: false,
-        success: () => {
+        success: newSong => {
+          setMySongs(prev => [newSong, ...prev]);
           showToast('Song uploaded successfully!');
           e.target.reset();
           submitBtn.disabled = false;
           submitBtn.innerHTML = 'Upload Track';
+          setTab('mysongs');
           fetchAllSongs();
-          fetchMySongs();
         },
         error: xhr => {
           showToast('Upload failed: ' + (xhr.responseJSON?.error || 'Unknown error'));
@@ -1217,15 +1242,19 @@ const DetailView = () => {
     });
   };
   const handleRemoveFromPlaylist = songId => {
+    const previousSongs = [...songs];
+    setSongs(songs.filter(s => s.id !== songId)); // Optimistic UI update
     $.ajax({
       url: `/api/v1/playlists/${data.id}/songs/${songId}`,
       type: 'DELETE',
       success: res => {
         showToast('Song removed');
-        setSongs(songs.filter(s => s.id !== songId));
         detailContext.data.songs = res.songs;
       },
-      error: xhr => showToast(xhr.responseJSON?.error || 'Failed to remove song')
+      error: xhr => {
+        showToast(xhr.responseJSON?.error || 'Failed to remove song');
+        setSongs(previousSongs);
+      }
     });
   };
   return /*#__PURE__*/React.createElement("div", {
@@ -1496,8 +1525,10 @@ const AddToPlaylistModal = () => {
     className: "d-grid gap-2"
   }, userPlaylists.map(p => /*#__PURE__*/React.createElement("button", {
     key: p.id,
-    className: "btn btn-outline-light text-start py-2",
+    className: "btn btn-outline-light w-100 text-start py-3 mb-2 rounded-3",
     onClick: () => {
+      setAddToPlaylistModal(null);
+      showToast(`Adding to ${p.title}...`);
       $.ajax({
         url: `/api/v1/playlists/${p.id}/songs`,
         type: 'POST',
@@ -1507,7 +1538,6 @@ const AddToPlaylistModal = () => {
         }),
         success: () => {
           showToast(`Added to ${p.title}`);
-          setAddToPlaylistModal(null);
         },
         error: xhr => showToast(xhr.responseJSON?.error || 'Failed to add song')
       });
@@ -1719,6 +1749,7 @@ const App = () => {
     dynamicAllSongs,
     fetchAllSongs,
     mySongs,
+    setMySongs,
     fetchMySongs,
     userPlaylists,
     setUserPlaylists,
