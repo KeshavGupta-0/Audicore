@@ -9,9 +9,14 @@
   <!-- DNS prefetch & preconnect for CDN speed -->
   <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="dns-prefetch" href="https://unpkg.com">
-  <link rel="dns-prefetch" href="https://code.jquery.com">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://code.jquery.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+  <!-- Preload critical scripts so browser fetches them in parallel -->
+  <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin>
+  <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
+  <link rel="preload" href="https://code.jquery.com/jquery-3.7.1.min.js" as="script" crossorigin>
 
   <!-- Fonts (display=swap prevents FOIT) -->
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,700&f[]=satoshi@400,500&display=swap" rel="stylesheet">
@@ -24,24 +29,358 @@
 
   <!-- App styles -->
   <link rel="stylesheet" href="/static/css/styles.css?v=1781603041.61957">
+
+  <!-- ============================================================
+       LOADER STYLES — inline so they render before ANY CDN loads
+  ============================================================ -->
+  <style>
+    /* ── Reset & base ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    #audicore-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: #000505;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      font-family: system-ui, sans-serif;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    #audicore-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* ── 3D stage ── */
+    .loader-stage {
+      perspective: 600px;
+      width: 180px;
+      height: 180px;
+      position: relative;
+    }
+
+    /* ── Outer glowing ring (CSS-only SVG replacement) ── */
+    .loader-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      animation: ring-spin 2.4s linear infinite;
+    }
+    @keyframes ring-spin {
+      from { transform: rotateY(0deg) rotateX(10deg); }
+      to   { transform: rotateY(360deg) rotateX(10deg); }
+    }
+
+    /* ── SVG progress circle ── */
+    .loader-svg {
+      width: 180px;
+      height: 180px;
+      position: absolute;
+      inset: 0;
+      transform: rotate(-90deg);
+    }
+    .loader-svg .track {
+      fill: none;
+      stroke: rgba(0,255,255,0.08);
+      stroke-width: 4;
+    }
+    .loader-svg .progress-arc {
+      fill: none;
+      stroke: url(#arcGrad);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 502; /* 2π × 80 */
+      stroke-dashoffset: 502;
+      transition: stroke-dashoffset 0.35s ease;
+      filter: drop-shadow(0 0 6px #00ffff);
+    }
+
+    /* ── Logo container ── */
+    .loader-logo-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: logo-float 3s ease-in-out infinite;
+    }
+    @keyframes logo-float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%       { transform: translateY(-6px) scale(1.04); }
+    }
+    .loader-logo-wrap img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(0,255,255,0.5));
+    }
+
+    /* ── Glow pulse behind logo ── */
+    .loader-glow {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,255,0.15), transparent 70%);
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+    @keyframes glow-pulse {
+      0%, 100% { transform: scale(1);   opacity: 0.6; }
+      50%       { transform: scale(1.5); opacity: 0.2; }
+    }
+
+    /* ── App name ── */
+    .loader-name {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #00ffff, #ffffff, #00ffff);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 2.5s linear infinite;
+    }
+    @keyframes shimmer {
+      from { background-position: 0% center; }
+      to   { background-position: 200% center; }
+    }
+
+    /* ── Audio wave bars ── */
+    .loader-waves {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 32px;
+    }
+    .loader-waves .bar {
+      width: 4px;
+      border-radius: 2px;
+      background: linear-gradient(to top, #00ffff, #0077ff);
+      box-shadow: 0 0 6px rgba(0,255,255,0.4);
+    }
+    .loader-waves .bar:nth-child(1)  { animation: wave 1.0s 0.0s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(2)  { animation: wave 1.0s 0.1s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(3)  { animation: wave 1.0s 0.2s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(4)  { animation: wave 1.0s 0.3s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(5)  { animation: wave 1.0s 0.4s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(6)  { animation: wave 1.0s 0.3s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(7)  { animation: wave 1.0s 0.2s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(8)  { animation: wave 1.0s 0.1s ease-in-out infinite alternate; }
+    .loader-waves .bar:nth-child(9)  { animation: wave 1.0s 0.0s ease-in-out infinite alternate; }
+    @keyframes wave {
+      from { height: 6px;  opacity: 0.4; }
+      to   { height: 30px; opacity: 1; }
+    }
+
+    /* ── Progress text ── */
+    .loader-status {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(0,255,255,0.5);
+    }
+    .loader-pct {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(0,255,255,0.75);
+      letter-spacing: 1px;
+    }
+
+    /* ── Particle dots ── */
+    .loader-particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: rgba(0,255,255,0.6);
+      animation: particle-drift linear infinite;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- ============================================================
+       LOADING SCREEN — renders before any JS/CDN script loads
+  ============================================================ -->
+  <div id="audicore-loader">
+    <!-- Floating particles -->
+    <div class="loader-particles" id="loader-particles"></div>
+
+    <!-- 3D Ring + Logo -->
+    <div class="loader-stage">
+      <!-- SVG progress arc with gradient -->
+      <svg class="loader-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#00ffff"/>
+            <stop offset="100%" stop-color="#0055ff"/>
+          </linearGradient>
+        </defs>
+        <circle class="track"        cx="90" cy="90" r="80"/>
+        <circle class="progress-arc" cx="90" cy="90" r="80" id="loader-arc"/>
+      </svg>
+
+      <!-- Glow behind logo -->
+      <div class="loader-glow"></div>
+
+      <!-- Logo with floating animation -->
+      <div class="loader-logo-wrap">
+        <img src="/static/assets/audicore-logo.webp" alt="Audicore">
+      </div>
+
+      <!-- Spinning ring decoration (outer) -->
+      <div class="loader-ring" style="
+        border: 1.5px dashed rgba(0,255,255,0.12);
+        animation-duration: 8s;
+      "></div>
+    </div>
+
+    <!-- App name -->
+    <div class="loader-name">Audicore</div>
+
+    <!-- Equalizer wave bars -->
+    <div class="loader-waves">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+
+    <!-- Status + percentage -->
+    <div class="loader-status" id="loader-label">Waking up servers...</div>
+    <div class="loader-pct" id="loader-pct">0%</div>
+  </div>
+
+  <!-- ============================================================
+       LOADER CONTROLLER — tracks real load phases & keeps server alive
+  ============================================================ -->
+  <script>
+    (function () {
+      var arc      = document.getElementById('loader-arc');
+      var label    = document.getElementById('loader-label');
+      var pct      = document.getElementById('loader-pct');
+      var loader   = document.getElementById('audicore-loader');
+      var particles= document.getElementById('loader-particles');
+      var CIRC     = 2 * Math.PI * 80; // 502.65
+
+      // ── Spawn floating particles ──
+      for (var i = 0; i < 25; i++) {
+        (function(i) {
+          var p = document.createElement('div');
+          p.className = 'particle';
+          var size    = Math.random() * 3 + 1;
+          var startX  = Math.random() * 100;
+          var dur     = Math.random() * 10 + 6;
+          var delay   = Math.random() * 8;
+          p.style.cssText = [
+            'width:' + size + 'px',
+            'height:' + size + 'px',
+            'left:' + startX + '%',
+            'bottom:-10px',
+            'animation-duration:' + dur + 's',
+            'animation-delay:' + delay + 's',
+            'opacity:' + (Math.random() * 0.6 + 0.2)
+          ].join(';');
+          p.style.setProperty('animation-name', 'particle-drift');
+          particles.appendChild(p);
+        })(i);
+      }
+      // Inject particle keyframes
+      var ks = document.createElement('style');
+      ks.textContent = '@keyframes particle-drift { 0%{transform:translateY(0) translateX(0);opacity:0} 10%{opacity:1} 90%{opacity:0.5} 100%{transform:translateY(-110vh) translateX(' + (Math.random()*60-30) + 'px);opacity:0} }';
+      document.head.appendChild(ks);
+
+      // ── Progress updater ──
+      var current = 0;
+      function setProgress(val, msg) {
+        val = Math.min(100, Math.max(current, val));
+        current = val;
+        var offset = CIRC * (1 - val / 100);
+        arc.style.strokeDashoffset = offset;
+        if (pct) pct.textContent = Math.round(val) + '%';
+        if (msg && label) label.textContent = msg;
+      }
+
+      // ── Phase 1: Instant (HTML loaded) ──
+      setProgress(10, 'Loading Audicore...');
+
+      // ── Phase 2: When stylesheets loaded ──
+      window.addEventListener('load', function() {
+        setProgress(60, 'Almost there...');
+      });
+
+      // ── Phase 3: Animate to 80% while waiting for JS ──
+      var rampTimer = null;
+      var rampVal   = 10;
+      function ramp() {
+        rampVal += 0.8;
+        if (rampVal < 80) {
+          setProgress(rampVal, rampVal < 30 ? 'Waking up servers...' : rampVal < 55 ? 'Loading scripts...' : 'Connecting...');
+          rampTimer = setTimeout(ramp, 180);
+        }
+      }
+      setTimeout(ramp, 300);
+
+      // ── Public API — called from app.js when React is ready ──
+      window.loaderSetProgress = function(val, msg) {
+        clearTimeout(rampTimer);
+        setProgress(val, msg);
+      };
+      window.loaderDone = function() {
+        clearTimeout(rampTimer);
+        setProgress(100, 'Ready!');
+        setTimeout(function() {
+          loader.classList.add('hidden');
+          // Remove from DOM after fade
+          setTimeout(function() {
+            if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+          }, 700);
+        }, 500);
+      };
+
+      // ── Keep-alive ping (every 14 min to prevent Render cold starts) ──
+      function keepAlive() {
+        fetch('/api/v1/songs/trending').catch(function(){});
+      }
+      setInterval(keepAlive, 14 * 60 * 1000);
+    })();
+  </script>
+
+  <!-- App root -->
   <div id="root"></div>
 
   <!-- React (production builds, no source maps) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin defer></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin defer></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
   <!-- jQuery (used for $.ajax throughout app) -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin defer></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin></script>
 
   <!-- Bootstrap JS (for modal, tooltip etc.) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <!--
     Pre-compiled JS — no babel/standalone needed.
     Whenever you edit app.jsx, run:  npm run build
   -->
-  <script src="/static/js/app.js?v=1781603041.61957" defer></script>
+  <script src="/static/js/app.js?v=1781603041.61957"></script>
 </body>
 </html>

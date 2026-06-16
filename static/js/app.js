@@ -1609,6 +1609,8 @@ const App = () => {
           audio: s.audio || s.file_path,
           cover: s.cover || s.cover_url
         })));
+        // Signal loader: all data ready — dismiss loading screen
+        if (typeof window.loaderDone === 'function') window.loaderDone();
       }
     });
   }, []);
@@ -1617,6 +1619,8 @@ const App = () => {
     fetchMySongs();
   }, [fetchUserPlaylists, fetchMySongs]);
   useEffect(() => {
+    // Signal loader: React mounted, starting API calls
+    if (typeof window.loaderSetProgress === 'function') window.loaderSetProgress(88, 'Loading your music...');
     $.ajax({
       url: '/api/v1/artists/',
       type: 'GET',
