@@ -788,8 +788,11 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       const { detailContext, playSong, user, showToast, fetchUserPlaylists, setView, detailRefreshKey } = useContext(AppContext);
       const { type, data } = detailContext;
       const [songs, setSongs] = useState([]);
-      
+      const isFirstRefreshRun = useRef(true);
+
+      // Effect 1: runs when navigating to a different album/playlist/song
       useEffect(() => {
+        isFirstRefreshRun.current = true; // reset refresh guard whenever view changes
         if (type === 'album') {
           $.ajax({
             url: `/api/v1/albums/${data.id}`,
@@ -811,21 +814,32 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             cover: data.cover || data.cover_url
           }]);
         } else {
-          // Playlist: fetch fresh from API so songs are always current
-          $.ajax({
-            url: `/api/v1/playlists/${data.id}`,
-            type: 'GET',
-            success: (res) => {
-              setSongs((res.songs || []).map(s => ({
-                ...s,
-                audio: s.audio || s.file_path,
-                cover: s.cover || s.cover_url
-              })));
-            },
-            error: () => setSongs(data.songs || [])
-          });
+          // Playlist: render from cached data INSTANTLY (no API wait)
+          setSongs((data.songs || []).map(s => ({
+            ...s,
+            audio: s.audio || s.file_path,
+            cover: s.cover || s.cover_url
+          })));
         }
-      }, [type, data.id, detailRefreshKey]);
+      }, [type, data.id]);
+
+      // Effect 2: only fires when a song is added/removed, NOT on initial mount
+      useEffect(() => {
+        if (type !== 'playlist') return;
+        if (isFirstRefreshRun.current) { isFirstRefreshRun.current = false; return; }
+        // Fetch fresh playlist data after user added/removed a song
+        $.ajax({
+          url: `/api/v1/playlists/${data.id}`,
+          type: 'GET',
+          success: (res) => {
+            setSongs((res.songs || []).map(s => ({
+              ...s,
+              audio: s.audio || s.file_path,
+              cover: s.cover || s.cover_url
+            })));
+          }
+        });
+      }, [detailRefreshKey]);
       
       const handlePlayAll = () => {
         if(songs.length) playSong(songs[0], songs);

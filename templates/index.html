@@ -18,10 +18,10 @@
   <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
   <link rel="preload" href="https://code.jquery.com/jquery-3.7.1.min.js" as="script" crossorigin>
 
-  <!-- Fonts (display=swap prevents FOIT) -->
+  <!-- Fonts -->
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,700&f[]=satoshi@400,500&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap CSS (layout utilities only) -->
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Bootstrap Icons -->
@@ -31,12 +31,12 @@
   <link rel="stylesheet" href="/static/css/styles.css?v=1781603041.61957">
 
   <!-- ============================================================
-       LOADER STYLES — inline so they render before ANY CDN loads
+       LOADER STYLES — inline, renders before any CDN loads
   ============================================================ -->
   <style>
-    /* ── Reset & base ── */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Root overlay ── */
     #audicore-loader {
       position: fixed;
       inset: 0;
@@ -46,347 +46,454 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 28px;
+      gap: 24px;
       font-family: system-ui, sans-serif;
-      transition: opacity 0.6s ease, visibility 0.6s ease;
+      overflow: hidden;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.9s cubic-bezier(0.4,0,0.2,1), visibility 0.9s;
     }
     #audicore-loader.hidden {
       opacity: 0;
       visibility: hidden;
-      pointer-events: none;
     }
 
-    /* ── 3D stage ── */
-    .loader-stage {
-      perspective: 600px;
-      width: 180px;
-      height: 180px;
-      position: relative;
-    }
-
-    /* ── Outer glowing ring (CSS-only SVG replacement) ── */
-    .loader-ring {
-      position: absolute;
-      inset: 0;
+    /* ── Ambient glow blobs ── */
+    .amb {
+      position: fixed;
       border-radius: 50%;
-      animation: ring-spin 2.4s linear infinite;
+      pointer-events: none;
+      filter: blur(80px);
+      animation: amb-pulse 6s ease-in-out infinite alternate;
     }
-    @keyframes ring-spin {
-      from { transform: rotateY(0deg) rotateX(10deg); }
-      to   { transform: rotateY(360deg) rotateX(10deg); }
+    .amb-1 {
+      width: 50vw; height: 50vw;
+      top: -15%; left: -10%;
+      background: radial-gradient(circle, rgba(0,120,100,0.25) 0%, transparent 70%);
+      animation-delay: 0s;
+    }
+    .amb-2 {
+      width: 40vw; height: 40vw;
+      bottom: -10%; right: -5%;
+      background: radial-gradient(circle, rgba(0,50,180,0.2) 0%, transparent 70%);
+      animation-delay: -3s;
+    }
+    .amb-3 {
+      width: 20vw; height: 20vw;
+      top: 30%; left: 60%;
+      background: radial-gradient(circle, rgba(0,200,180,0.1) 0%, transparent 70%);
+      animation-delay: -1.5s;
+    }
+    @keyframes amb-pulse {
+      from { transform: scale(1) translate(0,0); }
+      to   { transform: scale(1.2) translate(2%,2%); }
     }
 
-    /* ── SVG progress circle ── */
-    .loader-svg {
-      width: 180px;
-      height: 180px;
+    /* ── Stage ── */
+    .ld-stage {
+      position: relative;
+      width: 220px;
+      height: 220px;
+    }
+
+    /* ── SVG progress arc ── */
+    .ld-svg {
       position: absolute;
       inset: 0;
+      width: 220px;
+      height: 220px;
       transform: rotate(-90deg);
     }
-    .loader-svg .track {
+    .ld-svg .track {
       fill: none;
-      stroke: rgba(0,255,255,0.08);
-      stroke-width: 4;
+      stroke: rgba(0,255,255,0.06);
+      stroke-width: 3;
     }
-    .loader-svg .progress-arc {
+    .ld-svg .progress-arc {
       fill: none;
-      stroke: url(#arcGrad);
-      stroke-width: 4;
+      stroke: url(#pg);
+      stroke-width: 3;
       stroke-linecap: round;
-      stroke-dasharray: 502; /* 2π × 80 */
-      stroke-dashoffset: 502;
-      transition: stroke-dashoffset 0.35s ease;
-      filter: drop-shadow(0 0 6px #00ffff);
+      stroke-dasharray: 628;    /* 2π × 100 */
+      stroke-dashoffset: 628;
+      transition: stroke-dashoffset 0.4s ease;
+      filter: drop-shadow(0 0 8px rgba(0,255,255,0.8));
     }
 
-    /* ── Logo container ── */
-    .loader-logo-wrap {
+    /* ── Outer slow ring (ccw) ── */
+    .ring-outer {
+      position: absolute;
+      inset: -15px; /* 220 + 30 = 250 */
+      border-radius: 50%;
+      border: 1px dashed rgba(0,255,255,0.12);
+      animation: spin-ccw 18s linear infinite;
+    }
+    /* Dots on outer ring */
+    .ring-outer::before, .ring-outer::after {
+      content: '';
+      position: absolute;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(0,255,255,0.5);
+      box-shadow: 0 0 8px rgba(0,255,255,0.7);
+    }
+    .ring-outer::before { top: -2.5px; left: 50%; transform: translateX(-50%); }
+    .ring-outer::after  { bottom: -2.5px; left: 50%; transform: translateX(-50%); }
+
+    /* ── Fast spinning arc rings ── */
+    .ring-fast-1 {
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top: 2px solid rgba(0,255,255,0.9);
+      border-right: 2px solid rgba(0,200,255,0.4);
+      animation: spin-cw 1.6s linear infinite;
+      box-shadow: inset 0 0 0 0 transparent;
+      filter: drop-shadow(0 0 5px rgba(0,255,255,0.5));
+    }
+    .ring-fast-2 {
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-bottom: 1.5px solid rgba(0,100,255,0.8);
+      border-left: 1.5px solid rgba(0,100,255,0.3);
+      animation: spin-ccw 2.3s linear infinite;
+      filter: drop-shadow(0 0 4px rgba(0,100,255,0.4));
+    }
+
+    /* ── Glow core ── */
+    .ld-glow {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,255,0.12) 0%, rgba(0,80,80,0.05) 50%, transparent 70%);
+      animation: glow-breathe 2.8s ease-in-out infinite;
+    }
+    @keyframes glow-breathe {
+      0%, 100% { transform: scale(1);   opacity: 0.7; }
+      50%       { transform: scale(1.4); opacity: 0.3; }
+    }
+
+    /* ── Logo ── */
+    .ld-logo {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: logo-float 3s ease-in-out infinite;
+      animation: logo-levitate 4s ease-in-out infinite;
     }
-    @keyframes logo-float {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50%       { transform: translateY(-6px) scale(1.04); }
-    }
-    .loader-logo-wrap img {
-      width: 80px;
-      height: 80px;
+    .ld-logo img {
+      width: 82px;
+      height: 82px;
       object-fit: contain;
-      filter: drop-shadow(0 0 18px rgba(0,255,255,0.5));
+      filter: drop-shadow(0 0 16px rgba(0,255,255,0.5)) drop-shadow(0 0 32px rgba(0,200,255,0.2));
+    }
+    @keyframes logo-levitate {
+      0%, 100% { transform: translateY(0)   scale(1);    filter: drop-shadow(0 0 20px rgba(0,255,255,0.4)); }
+      40%       { transform: translateY(-7px) scale(1.04); filter: drop-shadow(0 0 30px rgba(0,255,255,0.7)); }
+      70%       { transform: translateY(-3px) scale(1.01); }
     }
 
-    /* ── Glow pulse behind logo ── */
-    .loader-glow {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,255,255,0.15), transparent 70%);
-      animation: glow-pulse 2s ease-in-out infinite;
-    }
-    @keyframes glow-pulse {
-      0%, 100% { transform: scale(1);   opacity: 0.6; }
-      50%       { transform: scale(1.5); opacity: 0.2; }
-    }
+    /* ── Keyframes ── */
+    @keyframes spin-cw  { to { transform: rotate(360deg);  } }
+    @keyframes spin-ccw { to { transform: rotate(-360deg); } }
 
     /* ── App name ── */
-    .loader-name {
-      font-size: 26px;
+    .ld-name {
+      font-size: 22px;
       font-weight: 700;
-      letter-spacing: 4px;
+      letter-spacing: 8px;
       text-transform: uppercase;
-      background: linear-gradient(90deg, #00ffff, #ffffff, #00ffff);
-      background-size: 200% auto;
+      background: linear-gradient(90deg, rgba(0,255,255,0.4), #ffffff, rgba(0,220,255,0.8), #ffffff, rgba(0,255,255,0.4));
+      background-size: 300% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      animation: shimmer 2.5s linear infinite;
+      animation: text-shimmer 3s linear infinite;
     }
-    @keyframes shimmer {
-      from { background-position: 0% center; }
-      to   { background-position: 200% center; }
+    @keyframes text-shimmer {
+      from { background-position: 0%   center; }
+      to   { background-position: 300% center; }
     }
 
-    /* ── Audio wave bars ── */
-    .loader-waves {
+    /* ── Equalizer bars ── */
+    .ld-eq {
       display: flex;
       align-items: flex-end;
-      gap: 5px;
-      height: 32px;
+      gap: 4px;
+      height: 28px;
     }
-    .loader-waves .bar {
-      width: 4px;
-      border-radius: 2px;
-      background: linear-gradient(to top, #00ffff, #0077ff);
-      box-shadow: 0 0 6px rgba(0,255,255,0.4);
+    .ld-eq .b {
+      width: 3px;
+      border-radius: 3px;
+      background: linear-gradient(to top, #00ffff, #0066ff);
+      box-shadow: 0 0 5px rgba(0,200,255,0.4);
     }
-    .loader-waves .bar:nth-child(1)  { animation: wave 1.0s 0.0s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(2)  { animation: wave 1.0s 0.1s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(3)  { animation: wave 1.0s 0.2s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(4)  { animation: wave 1.0s 0.3s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(5)  { animation: wave 1.0s 0.4s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(6)  { animation: wave 1.0s 0.3s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(7)  { animation: wave 1.0s 0.2s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(8)  { animation: wave 1.0s 0.1s ease-in-out infinite alternate; }
-    .loader-waves .bar:nth-child(9)  { animation: wave 1.0s 0.0s ease-in-out infinite alternate; }
-    @keyframes wave {
-      from { height: 6px;  opacity: 0.4; }
-      to   { height: 30px; opacity: 1; }
+    .ld-eq .b:nth-child(1)  { animation: eq 0.9s 0.00s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(2)  { animation: eq 0.9s 0.07s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(3)  { animation: eq 0.9s 0.14s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(4)  { animation: eq 0.9s 0.21s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(5)  { animation: eq 0.9s 0.28s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(6)  { animation: eq 0.9s 0.35s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(7)  { animation: eq 0.9s 0.28s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(8)  { animation: eq 0.9s 0.21s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(9)  { animation: eq 0.9s 0.14s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(10) { animation: eq 0.9s 0.07s ease-in-out infinite alternate; }
+    .ld-eq .b:nth-child(11) { animation: eq 0.9s 0.00s ease-in-out infinite alternate; }
+    @keyframes eq {
+      from { height: 4px;  opacity: 0.35; }
+      to   { height: 26px; opacity: 1;    }
     }
 
-    /* ── Progress text ── */
-    .loader-status {
-      font-size: 12px;
-      letter-spacing: 2px;
+    /* ── Status row ── */
+    .ld-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
-      color: rgba(0,255,255,0.5);
+      color: rgba(0,255,255,0.45);
     }
-    .loader-pct {
-      font-size: 13px;
+    .ld-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #00ffff;
+      animation: dot-blink 1.2s ease-in-out infinite;
+      box-shadow: 0 0 6px #00ffff;
+    }
+    @keyframes dot-blink {
+      0%, 100% { opacity: 1; transform: scale(1);   }
+      50%       { opacity: 0.2; transform: scale(0.6); }
+    }
+    .ld-pct {
+      font-size: 12px;
       font-weight: 600;
-      color: rgba(0,255,255,0.75);
+      color: rgba(0,255,255,0.6);
       letter-spacing: 1px;
     }
 
-    /* ── Particle dots ── */
-    .loader-particles {
+    /* ── Floating particles ── */
+    .ld-particles {
       position: fixed;
       inset: 0;
       pointer-events: none;
       overflow: hidden;
     }
-    .particle {
+    .pt {
       position: absolute;
-      width: 2px;
-      height: 2px;
       border-radius: 50%;
-      background: rgba(0,255,255,0.6);
-      animation: particle-drift linear infinite;
+      background: rgba(0,255,255,0.7);
+    }
+
+    /* ── Scan-line overlay for depth ── */
+    #audicore-loader::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
   <!-- ============================================================
-       LOADING SCREEN — renders before any JS/CDN script loads
+       LOADING SCREEN — instant, before CDN scripts load
   ============================================================ -->
   <div id="audicore-loader">
-    <!-- Floating particles -->
-    <div class="loader-particles" id="loader-particles"></div>
+    <!-- Ambient blobs -->
+    <div class="amb amb-1"></div>
+    <div class="amb amb-2"></div>
+    <div class="amb amb-3"></div>
 
-    <!-- 3D Ring + Logo -->
-    <div class="loader-stage">
-      <!-- SVG progress arc with gradient -->
-      <svg class="loader-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+    <!-- Floating particles -->
+    <div class="ld-particles" id="ld-particles"></div>
+
+    <!-- Central stage -->
+    <div class="ld-stage">
+      <!-- SVG progress arc -->
+      <svg class="ld-svg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%"   stop-color="#00ffff"/>
-            <stop offset="100%" stop-color="#0055ff"/>
+            <stop offset="50%"  stop-color="#00aaff"/>
+            <stop offset="100%" stop-color="#0033ff"/>
           </linearGradient>
         </defs>
-        <circle class="track"        cx="90" cy="90" r="80"/>
-        <circle class="progress-arc" cx="90" cy="90" r="80" id="loader-arc"/>
+        <circle class="track"        cx="110" cy="110" r="100"/>
+        <circle class="progress-arc" cx="110" cy="110" r="100" id="ld-arc"/>
       </svg>
 
-      <!-- Glow behind logo -->
-      <div class="loader-glow"></div>
+      <!-- Slow outer dashed ring with dots -->
+      <div class="ring-outer"></div>
 
-      <!-- Logo with floating animation -->
-      <div class="loader-logo-wrap">
+      <!-- Fast spinning arc rings -->
+      <div class="ring-fast-1"></div>
+      <div class="ring-fast-2"></div>
+
+      <!-- Glow orb -->
+      <div class="ld-glow"></div>
+
+      <!-- Logo -->
+      <div class="ld-logo">
         <img src="/static/assets/audicore-logo.webp" alt="Audicore">
       </div>
-
-      <!-- Spinning ring decoration (outer) -->
-      <div class="loader-ring" style="
-        border: 1.5px dashed rgba(0,255,255,0.12);
-        animation-duration: 8s;
-      "></div>
     </div>
 
-    <!-- App name -->
-    <div class="loader-name">Audicore</div>
+    <!-- Name -->
+    <div class="ld-name">Audicore</div>
 
-    <!-- Equalizer wave bars -->
-    <div class="loader-waves">
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
+    <!-- Equalizer -->
+    <div class="ld-eq">
+      <div class="b"></div><div class="b"></div><div class="b"></div>
+      <div class="b"></div><div class="b"></div><div class="b"></div>
+      <div class="b"></div><div class="b"></div><div class="b"></div>
+      <div class="b"></div><div class="b"></div>
     </div>
 
-    <!-- Status + percentage -->
-    <div class="loader-status" id="loader-label">Waking up servers...</div>
-    <div class="loader-pct" id="loader-pct">0%</div>
+    <!-- Status -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="ld-status">
+        <div class="ld-dot"></div>
+        <span id="ld-label">Waking up servers...</span>
+      </div>
+      <div class="ld-pct" id="ld-pct">0%</div>
+    </div>
   </div>
 
   <!-- ============================================================
-       LOADER CONTROLLER — tracks real load phases & keeps server alive
+       LOADER CONTROLLER
   ============================================================ -->
   <script>
     (function () {
-      var arc      = document.getElementById('loader-arc');
-      var label    = document.getElementById('loader-label');
-      var pct      = document.getElementById('loader-pct');
-      var loader   = document.getElementById('audicore-loader');
-      var particles= document.getElementById('loader-particles');
-      var CIRC     = 2 * Math.PI * 80; // 502.65
+      var loader  = document.getElementById('audicore-loader');
+      var arc     = document.getElementById('ld-arc');
+      var label   = document.getElementById('ld-label');
+      var pct     = document.getElementById('ld-pct');
+      var pts     = document.getElementById('ld-particles');
+      var CIRC    = 2 * Math.PI * 100; // 628.3
 
-      // ── Spawn floating particles ──
-      for (var i = 0; i < 25; i++) {
-        (function(i) {
-          var p = document.createElement('div');
-          p.className = 'particle';
-          var size    = Math.random() * 3 + 1;
-          var startX  = Math.random() * 100;
-          var dur     = Math.random() * 10 + 6;
-          var delay   = Math.random() * 8;
-          p.style.cssText = [
-            'width:' + size + 'px',
-            'height:' + size + 'px',
-            'left:' + startX + '%',
-            'bottom:-10px',
-            'animation-duration:' + dur + 's',
-            'animation-delay:' + delay + 's',
-            'opacity:' + (Math.random() * 0.6 + 0.2)
-          ].join(';');
-          p.style.setProperty('animation-name', 'particle-drift');
-          particles.appendChild(p);
-        })(i);
+      // ── Session guard: show loader only ONCE per session ──
+      if (sessionStorage.getItem('ac_loaded')) {
+        // Already seen this session — hide immediately, skip all animations
+        loader.style.display = 'none';
+        window.loaderDone         = function () {};
+        window.loaderSetProgress  = function () {};
+        return;
       }
-      // Inject particle keyframes
-      var ks = document.createElement('style');
-      ks.textContent = '@keyframes particle-drift { 0%{transform:translateY(0) translateX(0);opacity:0} 10%{opacity:1} 90%{opacity:0.5} 100%{transform:translateY(-110vh) translateX(' + (Math.random()*60-30) + 'px);opacity:0} }';
-      document.head.appendChild(ks);
+      sessionStorage.setItem('ac_loaded', '1');
 
-      // ── Progress updater ──
+      // ── Spawn particles ──
+      for (var i = 0; i < 30; i++) {
+        (function () {
+          var p     = document.createElement('div');
+          p.className = 'pt';
+          var s     = (Math.random() * 2.5 + 0.5).toFixed(1);
+          var dur   = (Math.random() * 12 + 7).toFixed(1);
+          var delay = (Math.random() * -15).toFixed(1);
+          var x     = (Math.random() * 100).toFixed(1);
+          p.style.cssText = [
+            'width:' + s + 'px',
+            'height:' + s + 'px',
+            'left:' + x + '%',
+            'bottom:-12px',
+            'opacity:0',
+            'animation:pt-rise ' + dur + 's ' + delay + 's linear infinite'
+          ].join(';');
+          pts.appendChild(p);
+        })();
+      }
+      var ptKf = document.createElement('style');
+      ptKf.textContent = '@keyframes pt-rise{0%{transform:translateY(0) translateX(0);opacity:0}8%{opacity:.7}92%{opacity:.3}100%{transform:translateY(-105vh) translateX(40px);opacity:0}}';
+      document.head.appendChild(ptKf);
+
+      // ── Progress ──
       var current = 0;
+      var rampTimer = null;
       function setProgress(val, msg) {
-        val = Math.min(100, Math.max(current, val));
+        val = Math.min(100, Math.max(current, +val));
         current = val;
-        var offset = CIRC * (1 - val / 100);
-        arc.style.strokeDashoffset = offset;
-        if (pct) pct.textContent = Math.round(val) + '%';
+        if (arc) arc.style.strokeDashoffset = (CIRC * (1 - val / 100)).toFixed(2);
+        if (pct)   pct.textContent  = Math.round(val) + '%';
         if (msg && label) label.textContent = msg;
       }
 
-      // ── Phase 1: Instant (HTML loaded) ──
-      setProgress(10, 'Loading Audicore...');
+      // ── Phases ──
+      setProgress(8, 'Waking up servers...');
 
-      // ── Phase 2: When stylesheets loaded ──
-      window.addEventListener('load', function() {
-        setProgress(60, 'Almost there...');
+      window.addEventListener('load', function () {
+        setProgress(55, 'Loading app...');
       });
 
-      // ── Phase 3: Animate to 80% while waiting for JS ──
-      var rampTimer = null;
-      var rampVal   = 10;
+      // Smooth ramp to 82% while waiting for React
+      var rampV = 8;
       function ramp() {
-        rampVal += 0.8;
-        if (rampVal < 80) {
-          setProgress(rampVal, rampVal < 30 ? 'Waking up servers...' : rampVal < 55 ? 'Loading scripts...' : 'Connecting...');
-          rampTimer = setTimeout(ramp, 180);
+        rampV += 0.6;
+        if (rampV < 83) {
+          var msg = rampV < 25 ? 'Waking up servers...'
+                  : rampV < 50 ? 'Loading scripts...'
+                  : rampV < 70 ? 'Almost ready...'
+                  :              'Connecting...';
+          setProgress(rampV, msg);
+          rampTimer = setTimeout(ramp, 200);
         }
       }
-      setTimeout(ramp, 300);
+      setTimeout(ramp, 400);
 
-      // ── Public API — called from app.js when React is ready ──
-      window.loaderSetProgress = function(val, msg) {
+      // ── Public API for React ──
+      window.loaderSetProgress = function (val, msg) {
         clearTimeout(rampTimer);
         setProgress(val, msg);
       };
+
       var loaderStart = Date.now();
-      window.loaderDone = function() {
+      window.loaderDone = function () {
         clearTimeout(rampTimer);
         setProgress(100, 'Ready!');
-        // Enforce a minimum 2-second display so it never flashes out on fast connections
-        var elapsed = Date.now() - loaderStart;
-        var minDisplay = 2000;
-        var delay = Math.max(600, minDisplay - elapsed);
-        setTimeout(function() {
-          loader.style.transition = 'opacity 0.8s ease, visibility 0.8s ease';
+        // Minimum 2-second display so it never flashes
+        var wait = Math.max(700, 2000 - (Date.now() - loaderStart));
+        setTimeout(function () {
           loader.classList.add('hidden');
-          // Remove from DOM after fade completes
-          setTimeout(function() {
+          setTimeout(function () {
             if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
-          }, 900);
-        }, delay);
+          }, 1000);
+        }, wait);
       };
 
-      // ── Keep-alive ping (every 14 min to prevent Render cold starts) ──
-      function keepAlive() {
-        fetch('/api/v1/songs/trending').catch(function(){});
-      }
-      setInterval(keepAlive, 14 * 60 * 1000);
+      // ── Keep-alive ping every 14 min ──
+      setInterval(function () {
+        fetch('/api/v1/songs/trending').catch(function () {});
+      }, 14 * 60 * 1000);
     })();
   </script>
 
   <!-- App root -->
   <div id="root"></div>
 
-  <!-- React (production builds, no source maps) -->
+  <!-- React -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
-  <!-- jQuery (used for $.ajax throughout app) -->
+  <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin></script>
 
-  <!-- Bootstrap JS (for modal, tooltip etc.) -->
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!--
-    Pre-compiled JS — no babel/standalone needed.
-    Whenever you edit app.jsx, run:  npm run build
-  -->
+  <!-- App -->
   <script src="/static/js/app.js?v=1781603041.61957"></script>
 </body>
 </html>
