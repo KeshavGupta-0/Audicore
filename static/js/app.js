@@ -102,7 +102,8 @@ const Sidebar = () => {
     setAuthModal,
     userPlaylists,
     mobileMenuOpen,
-    setMobileMenuOpen
+    setMobileMenuOpen,
+    isAuthLoading
   } = useContext(AppContext);
   useEffect(() => {
     $('.sidebar').hide().slideDown(400);
@@ -205,7 +206,12 @@ const Sidebar = () => {
     style: {
       borderColor: 'var(--border)'
     }
-  }, user ? /*#__PURE__*/React.createElement("div", {
+  }, isAuthLoading ? /*#__PURE__*/React.createElement("div", {
+    className: "text-center py-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "spinner-border text-accent spinner-border-sm",
+    role: "status"
+  })) : user ? /*#__PURE__*/React.createElement("div", {
     className: "d-flex align-items-center gap-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rounded-circle bg-accent d-flex justify-content-center align-items-center",
@@ -1187,6 +1193,7 @@ const CategoryView = () => {
 const DetailView = () => {
   const {
     detailContext,
+    setDetailContext,
     playSong,
     user,
     showToast,
@@ -1225,12 +1232,30 @@ const DetailView = () => {
         cover: data.cover || data.cover_url
       }]);
     } else {
-      // Playlist: render from cached data INSTANTLY (no API wait)
-      setSongs((data.songs || []).map(s => ({
-        ...s,
-        audio: s.audio || s.file_path,
-        cover: s.cover || s.cover_url
-      })));
+      // Playlist: render from cached data INSTANTLY (no API wait) if available
+      if (data.songs) {
+        setSongs(data.songs.map(s => ({
+          ...s,
+          audio: s.audio || s.file_path,
+          cover: s.cover || s.cover_url
+        })));
+      }
+      // Fetch fresh playlist data to update header and songs, especially useful on page refresh
+      $.ajax({
+        url: `/api/v1/playlists/${data.id}`,
+        type: 'GET',
+        success: res => {
+          setDetailContext(prev => prev ? {
+            ...prev,
+            data: res
+          } : prev);
+          setSongs((res.songs || []).map(s => ({
+            ...s,
+            audio: s.audio || s.file_path,
+            cover: s.cover || s.cover_url
+          })));
+        }
+      });
     }
   }, [type, data.id]);
 
@@ -1614,6 +1639,7 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const currentSong = queue[queueIndex] || null;
   const [user, setUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(!!localStorage.getItem('access_token'));
   const [authModal, setAuthModal] = useState(localStorage.getItem('access_token') ? null : 'login');
   const [likedSongs, setLikedSongs] = useState(new Set());
   const [toast, setToast] = useState({
@@ -1828,14 +1854,20 @@ const App = () => {
               'Authorization': ''
             }
           });
+        },
+        complete: () => {
+          setIsAuthLoading(false);
         }
       });
+    } else {
+      setIsAuthLoading(false);
     }
   }, []);
   const contextValue = {
     currentView,
     setView: handleSetView,
     detailContext,
+    setDetailContext,
     playSong,
     currentSong,
     isPlaying,
@@ -1845,6 +1877,7 @@ const App = () => {
     setQueueIndex,
     user,
     setUser,
+    isAuthLoading,
     authModal,
     setAuthModal,
     likedSongs,

@@ -51,7 +51,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
     };
 
     const Sidebar = () => {
-      const { setView, currentView, user, logout, setAuthModal, userPlaylists, mobileMenuOpen, setMobileMenuOpen } = useContext(AppContext);
+      const { setView, currentView, user, logout, setAuthModal, userPlaylists, mobileMenuOpen, setMobileMenuOpen, isAuthLoading } = useContext(AppContext);
       
       useEffect(() => {
         $('.sidebar').hide().slideDown(400);
@@ -91,7 +91,9 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             )}
 
             <div className="mt-auto p-4 border-top" style={{ borderColor: 'var(--border)' }}>
-              {user ? (
+              {isAuthLoading ? (
+                <div className="text-center py-2"><div className="spinner-border text-accent spinner-border-sm" role="status"></div></div>
+              ) : user ? (
                 <div className="d-flex align-items-center gap-3">
                   <div className="rounded-circle bg-accent d-flex justify-content-center align-items-center" style={{ width: 32, height: 32, color: '#fff', fontWeight: 'bold' }}>
                     {user.username.charAt(0).toUpperCase()}
@@ -785,7 +787,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
     };
 
     const DetailView = () => {
-      const { detailContext, playSong, user, showToast, fetchUserPlaylists, setView, detailRefreshKey } = useContext(AppContext);
+      const { detailContext, setDetailContext, playSong, user, showToast, fetchUserPlaylists, setView, detailRefreshKey } = useContext(AppContext);
       const { type, data } = detailContext;
       const [songs, setSongs] = useState([]);
       const isFirstRefreshRun = useRef(true);
@@ -814,12 +816,27 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             cover: data.cover || data.cover_url
           }]);
         } else {
-          // Playlist: render from cached data INSTANTLY (no API wait)
-          setSongs((data.songs || []).map(s => ({
-            ...s,
-            audio: s.audio || s.file_path,
-            cover: s.cover || s.cover_url
-          })));
+          // Playlist: render from cached data INSTANTLY (no API wait) if available
+          if (data.songs) {
+            setSongs(data.songs.map(s => ({
+              ...s,
+              audio: s.audio || s.file_path,
+              cover: s.cover || s.cover_url
+            })));
+          }
+          // Fetch fresh playlist data to update header and songs, especially useful on page refresh
+          $.ajax({
+            url: `/api/v1/playlists/${data.id}`,
+            type: 'GET',
+            success: (res) => {
+              setDetailContext(prev => prev ? { ...prev, data: res } : prev);
+              setSongs((res.songs || []).map(s => ({
+                ...s,
+                audio: s.audio || s.file_path,
+                cover: s.cover || s.cover_url
+              })));
+            }
+          });
         }
       }, [type, data.id]);
 
@@ -1107,6 +1124,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       const [isPlaying, setIsPlaying] = useState(false);
       const currentSong = queue[queueIndex] || null;
       const [user, setUser] = useState(null);
+      const [isAuthLoading, setIsAuthLoading] = useState(!!localStorage.getItem('access_token'));
       const [authModal, setAuthModal] = useState(localStorage.getItem('access_token') ? null : 'login');
       const [likedSongs, setLikedSongs] = useState(new Set());
       const [toast, setToast] = useState({ show: false, msg: '' });
@@ -1284,16 +1302,21 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
             error: () => {
               localStorage.removeItem('access_token');
               $.ajaxSetup({ headers: { 'Authorization': '' } });
+            },
+            complete: () => {
+              setIsAuthLoading(false);
             }
           });
+        } else {
+          setIsAuthLoading(false);
         }
       }, []);
 
       const contextValue = {
         currentView, setView: handleSetView,
-        detailContext, playSong, currentSong,
+        detailContext, setDetailContext, playSong, currentSong,
         isPlaying, setIsPlaying, queue, queueIndex, setQueueIndex,
-        user, setUser, authModal, setAuthModal,
+        user, setUser, isAuthLoading, authModal, setAuthModal,
         likedSongs, likeSong, showToast, logout,
         dynamicArtists, dynamicAlbums, dynamicTrending, dynamicAllSongs, fetchAllSongs,
         mySongs, setMySongs, fetchMySongs,
