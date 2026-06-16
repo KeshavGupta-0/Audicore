@@ -386,15 +386,15 @@
       var pts     = document.getElementById('ld-particles');
       var CIRC    = 2 * Math.PI * 100; // 628.3
 
-      // ── Session guard: show loader only ONCE per session ──
-      if (sessionStorage.getItem('ac_loaded')) {
+      // ── Session guard: show loader only ONCE per device ──
+      if (localStorage.getItem('ac_loaded')) {
         // Already seen this session — hide immediately, skip all animations
         loader.style.display = 'none';
         window.loaderDone         = function () {};
         window.loaderSetProgress  = function () {};
         return;
       }
-      sessionStorage.setItem('ac_loaded', '1');
+      localStorage.setItem('ac_loaded', '1');
 
       // ── Spawn particles ──
       for (var i = 0; i < 30; i++) {

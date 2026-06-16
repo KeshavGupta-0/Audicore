@@ -1066,6 +1066,7 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
                           data: JSON.stringify({ song_id: song.id }),
                           success: () => {
                             showToast(`Added to ${p.title}`);
+                            fetchUserPlaylists(); // Instantly update global cache
                             // If currently viewing this playlist, trigger a refresh
                             if (currentView && currentView.name === 'detail' &&
                                 detailContext && detailContext.type === 'playlist' &&
@@ -1089,8 +1090,18 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
     };
 
     const App = () => {
-      const [currentView, setView] = useState({ name: 'home' });
-      const [detailContext, setDetailContext] = useState(null);
+      const [currentView, setView] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        const view = params.get('view');
+        return view ? { name: view } : { name: 'home' };
+      });
+      const [detailContext, setDetailContext] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'detail' && params.get('type') && params.get('id')) {
+           return { type: params.get('type'), data: { id: parseInt(params.get('id')), title: 'Loading...', songs: [] } };
+        }
+        return null;
+      });
       const [queue, setQueue] = useState([]);
       const [queueIndex, setQueueIndex] = useState(0);
       const [isPlaying, setIsPlaying] = useState(false);
@@ -1155,6 +1166,24 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
         });
       }, []);
 
+      // Handle browser back/forward buttons
+      useEffect(() => {
+        const handlePopState = () => {
+          const params = new URLSearchParams(window.location.search);
+          const view = params.get('view');
+          if (view) {
+            setView({ name: view });
+            if (view === 'detail') {
+               setDetailContext({ type: params.get('type'), data: { id: parseInt(params.get('id')), title: 'Loading...', songs: [] } });
+            }
+          } else {
+            setView({ name: 'home' });
+          }
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+      }, []);
+
       useEffect(() => {
         fetchUserPlaylists();
         fetchMySongs();
@@ -1196,7 +1225,11 @@ const { useState, useEffect, useRef, useCallback, useContext, createContext } = 
       const handleSetView = (viewObj) => {
         if (viewObj.name === 'detail') setDetailContext(viewObj);
         setView(viewObj);
-        window.history.pushState(viewObj, '', '?view=' + viewObj.name);
+        let url = '?view=' + viewObj.name;
+        if (viewObj.name === 'detail' && viewObj.type && viewObj.data && viewObj.data.id) {
+            url += `&type=${viewObj.type}&id=${viewObj.data.id}`;
+        }
+        window.history.pushState(viewObj, '', url);
       };
 
       const playSong = (song, newQueue) => {
